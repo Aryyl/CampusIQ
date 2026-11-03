@@ -1,0 +1,6 @@
+export { activityService } from './activityService'
+export { analyticsService } from './analyticsService'
+export { deadlineService } from './deadlineService'
+export { documentService } from './documentService'
+export { noticeService } from './noticeService'
+export { studentService } from './studentService'
