@@ -139,3 +139,4 @@ export async function deleteNotification(notificationId) {
     console.warn('Could not delete notification:', err)
   }
 }
+

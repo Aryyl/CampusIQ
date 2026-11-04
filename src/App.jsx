@@ -266,7 +266,7 @@ function OverviewPage({ currentUser, onNavigate, notify }) {
             : `Here is your academic overview for ${currentUser?.department || 'your department'}.`}
         </p>
       </div>
-      <button className="hero-search" onClick={() => notify('Search will be connected to your university data.') }>
+      <button className="hero-search" onClick={() => notify('Search will be connected to your university data.')}>
         <Search size={18} strokeWidth={1.8} />
         <span>Search anything</span>
         <kbd>⌘ K</kbd>
