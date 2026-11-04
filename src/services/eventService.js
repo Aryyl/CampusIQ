@@ -158,6 +158,24 @@ export async function createEvent(eventData, posterFile = null, adminInfo = {}) 
   }
 
   await setDoc(docRef, record)
+
+  // Notify students if published
+  if (record.status === 'Published') {
+    try {
+      await addDoc(collection(db, 'campus_notifications'), {
+        type: 'new_event',
+        title: 'New Campus Event',
+        message: `New event: "${record.title}" (${record.category || 'General'})`,
+        recipientRole: 'student',
+        recipientUid: null,
+        linkType: 'event',
+        linkId: eventId,
+        read: false,
+        createdAt: serverTimestamp(),
+      })
+    } catch (_) {}
+  }
+
   return { id: eventId, ...record }
 }
 
@@ -185,6 +203,23 @@ export async function updateEvent(eventDocId, updates, posterFile = null, adminI
   }
 
   await updateDoc(docRef, record)
+
+  if (updates.status === 'Published') {
+    try {
+      await addDoc(collection(db, 'campus_notifications'), {
+        type: 'new_event',
+        title: 'Event Published',
+        message: `Event: "${record.title}" is now published.`,
+        recipientRole: 'student',
+        recipientUid: null,
+        linkType: 'event',
+        linkId: eventDocId,
+        read: false,
+        createdAt: serverTimestamp(),
+      })
+    } catch (_) {}
+  }
+
   return { id: eventDocId, ...record }
 }
 

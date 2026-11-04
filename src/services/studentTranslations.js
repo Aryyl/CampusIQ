@@ -234,6 +234,10 @@ export const studentTranslations = {
     eventTime: 'Time',
     allStudents: 'All Students',
     targetedAudience: 'Targeted Audience',
+    notifications: 'Notifications',
+    notificationsAllRead: 'All caught up',
+    noNotifications: 'No notifications yet.',
+    markAllRead: 'Mark all as read',
   },
 
   as: {
@@ -464,6 +468,10 @@ export const studentTranslations = {
     eventTime: 'সময়',
     allStudents: 'সকলো ছাত্ৰ-ছাত্ৰী',
     targetedAudience: 'নিৰ্দিষ্ট শিক্ষাৰ্থী',
+    notifications: 'জাননীসমূহ',
+    notificationsAllRead: 'সকলো পঢ়া হ\'ল',
+    noNotifications: 'এতিয়ালৈকে কোনো জাননী নাই।',
+    markAllRead: 'সকলো পঢ়া বুলি চিহ্নিত কৰক',
   },
 }
 

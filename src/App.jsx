@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import {
   AlertCircle,
   ArrowUpRight,
@@ -44,6 +44,7 @@ import AuthPage from './pages/AuthPage'
 import { useCampusData } from './context/CampusDataContext'
 import { formatDate, formatFileSize, formatShortDate } from './utils/formatters'
 import { clearCurrentSession } from './services/authService'
+import { markAllAsRead, markAsRead, subscribeNotifications } from './services/notificationService'
 
 const navItems = [
   { label: 'Dashboard', page: 'Overview', icon: LayoutDashboard },
@@ -333,9 +334,44 @@ function WorkspacePage({ page, notify, onNavigate, currentUser }) {
 
 function Navigation({ currentUser, onLogout, activeNav, onNavigate, notificationsOpen, setNotificationsOpen, profileOpen, setProfileOpen, notify }) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  const [notifications, setNotifications] = useState([])
+
+  useEffect(() => {
+    const unsub = subscribeNotifications({ role: 'admin' }, (items) => {
+      setNotifications(items)
+    })
+    return () => unsub()
+  }, [])
+
+  const unreadCount = notifications.filter((n) => !n.read).length
+
   const navigate = (page) => {
     onNavigate(page)
     setMobileMenuOpen(false)
+  }
+
+  const handleNotificationClick = (item) => {
+    if (!item.read) {
+      markAsRead(item.id)
+    }
+    setNotificationsOpen(false)
+    if (item.linkType === 'issue' || item.type === 'new_issue') {
+      navigate('Issues')
+    } else if (item.linkType === 'event' || item.type === 'new_event') {
+      navigate('Events')
+    } else if (item.linkType === 'notice') {
+      navigate('Notices')
+    } else {
+      navigate('Overview')
+    }
+  }
+
+  const handleMarkAllRead = async () => {
+    const unreadIds = notifications.filter((n) => !n.read).map((n) => n.id)
+    if (unreadIds.length) {
+      await markAllAsRead(unreadIds)
+      notify('All notifications marked as read.')
+    }
   }
 
   return (
@@ -379,31 +415,48 @@ function Navigation({ currentUser, onLogout, activeNav, onNavigate, notification
               aria-label="Notifications"
             >
               <Bell size={15} strokeWidth={1.8} />
-              <span className="notification-amber-dot" />
+              {unreadCount > 0 && <span className="notification-amber-dot" />}
             </button>
             {notificationsOpen && (
               <div className="popover notification-popover">
                 <div className="popover-heading">
                   <strong>Notifications</strong>
-                  <span>2 new</span>
+                  <span>{unreadCount > 0 ? `${unreadCount} new` : 'All caught up'}</span>
                 </div>
-                <div className="notification-item">
-                  <span className="mini-icon green"><FileText size={14} /></span>
-                  <div>
-                    <strong>Document indexed</strong>
-                    <small>Examination Regulations is ready</small>
-                  </div>
+                <div className="notification-list-scroll">
+                  {notifications.length === 0 ? (
+                    <p className="notification-empty">No notifications yet.</p>
+                  ) : (
+                    notifications.slice(0, 8).map((item) => {
+                      const isUnread = !item.read
+                      const isIssue = item.type === 'new_issue' || item.linkType === 'issue'
+                      const isEvent = item.type === 'new_event' || item.linkType === 'event'
+                      return (
+                        <div
+                          key={item.id}
+                          className={`notification-item ${isUnread ? 'is-unread' : ''}`}
+                          onClick={() => handleNotificationClick(item)}
+                          role="button"
+                          tabIndex={0}
+                        >
+                          <span className={`mini-icon ${isIssue ? 'orange' : isEvent ? 'purple' : 'green'}`}>
+                            {isIssue ? <AlertCircle size={14} /> : isEvent ? <CalendarDays size={14} /> : <Bell size={14} />}
+                          </span>
+                          <div className="notification-item-text">
+                            <strong>{item.title || 'Campus alert'}</strong>
+                            <small>{item.message}</small>
+                          </div>
+                          {isUnread && <span className="unread-dot" />}
+                        </div>
+                      )
+                    })
+                  )}
                 </div>
-                <div className="notification-item">
-                  <span className="mini-icon orange"><Bell size={14} /></span>
-                  <div>
-                    <strong>Notice published</strong>
-                    <small>End Semester notice is live</small>
-                  </div>
-                </div>
-                <button className="popover-link" onClick={() => notify('All notifications marked as read.')}>
-                  Mark all as read
-                </button>
+                {unreadCount > 0 && (
+                  <button className="popover-link" onClick={handleMarkAllRead}>
+                    Mark all as read
+                  </button>
+                )}
               </div>
             )}
           </div>

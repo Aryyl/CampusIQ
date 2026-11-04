@@ -209,10 +209,13 @@ export async function submitIssue(formData, imageFiles = [], studentSession = {}
   try {
     await addDoc(collection(db, 'campus_notifications'), {
       type: 'new_issue',
+      title: 'New Issue Reported',
       ticketId,
-      message: `New issue submitted: ${ticketId} – "${formData.title}" by ${studentSession?.name || 'Student'}`,
+      message: `${ticketId}: "${formData.title}" (${formData.category || 'General'}) by ${studentSession?.name || 'Student'}`,
       recipientRole: 'admin',
       recipientUid: null,
+      linkType: 'issue',
+      linkId: ticketId,
       read: false,
       createdAt: now,
     })
@@ -379,15 +382,20 @@ export async function updateIssue(docId, issue, updates, adminInfo) {
     ...(updates.status === 'Resolved' ? { resolvedAt: serverTimestamp() } : {}),
   })
 
-  // Notify student if status changed
-  if (statusChanged) {
+  // Notify student if status or admin remarks changed
+  if (statusChanged || updates.adminRemarks) {
     try {
       await addDoc(collection(db, 'campus_notifications'), {
-        type: 'status_update',
+        type: 'issue_update',
+        title: statusChanged ? `Issue ${updates.status}` : 'Issue Remark Added',
         ticketId: issue.ticketId,
-        message: `Your issue ${issue.ticketId} is now "${updates.status}".`,
+        message: statusChanged
+          ? `Your complaint ${issue.ticketId} is now "${updates.status}".`
+          : `Remark added on ${issue.ticketId}: "${String(updates.adminRemarks).slice(0, 55)}..."`,
         recipientRole: 'student',
         recipientUid: issue.createdBy,
+        linkType: 'issue',
+        linkId: issue.ticketId,
         read: false,
         createdAt: serverTimestamp(),
       })

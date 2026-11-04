@@ -3,6 +3,7 @@ import {
   AlertCircle,
   Archive,
   ArrowDown,
+  Bell,
   CalendarDays,
   Check,
   ChevronDown,
@@ -44,6 +45,7 @@ import { getStudentTranslation, studentTranslations } from './services/studentTr
 import RaiseIssueView from './components/campuscare/RaiseIssueView'
 import MyIssuesView from './components/campuscare/MyIssuesView'
 import StudentEventsView from './components/events/StudentEventsView'
+import { markAllAsRead, markAsRead, subscribeNotifications } from './services/notificationService'
 import './student.css'
 
 const fallbackStudent = {
@@ -79,6 +81,40 @@ export default function StudentApp() {
   const [inputFocused, setInputFocused] = useState(false)
   const [isListening, setIsListening] = useState(false)
   const [activeView, setActiveView] = useState('chat') // 'chat' | 'raise-issue' | 'my-issues'
+  const [notifications, setNotifications] = useState([])
+  const [notificationsOpen, setNotificationsOpen] = useState(false)
+
+  const studentUid = student?.uid || student?.id || ''
+
+  useEffect(() => {
+    const unsub = subscribeNotifications({ role: 'student', uid: studentUid }, (items) => {
+      setNotifications(items)
+    })
+    return () => unsub()
+  }, [studentUid])
+
+  const unreadCount = notifications.filter((n) => !n.read).length
+
+  const handleNotificationClick = (item) => {
+    if (!item.read) {
+      markAsRead(item.id)
+    }
+    setNotificationsOpen(false)
+    setSidebarOpen(false)
+    if (item.linkType === 'issue' || item.type?.includes('issue')) {
+      setActiveView('my-issues')
+    } else if (item.linkType === 'event' || item.type?.includes('event')) {
+      setActiveView('events')
+    }
+  }
+
+  const handleMarkAllRead = async () => {
+    const unreadIds = notifications.filter((n) => !n.read).map((n) => n.id)
+    if (unreadIds.length) {
+      await markAllAsRead(unreadIds)
+      flash(t('notificationsAllRead') || 'All caught up!')
+    }
+  }
 
   const currentLang = preferences.language || 'en'
   const t = (key) => getStudentTranslation(currentLang, key)
@@ -558,6 +594,60 @@ export default function StudentApp() {
           />
         </div>
         <div className="student-sidebar-bottom">
+          <div className="student-notif-wrap">
+            <button
+              className={`sidebar-utility student-notif-btn ${notificationsOpen ? 'active' : ''}`}
+              onClick={() => {
+                setNotificationsOpen(!notificationsOpen)
+                setProfileOpen(false)
+              }}
+            >
+              <Bell size={16} /> {t('notifications') || 'Notifications'}
+              {unreadCount > 0 && <span className="student-notif-badge">{unreadCount}</span>}
+            </button>
+            {notificationsOpen && (
+              <div className="student-notif-popover">
+                <div className="popover-heading">
+                  <strong>{t('notifications') || 'Notifications'}</strong>
+                  <span>{unreadCount > 0 ? `${unreadCount} new` : t('notificationsAllRead') || 'All caught up'}</span>
+                </div>
+                <div className="notification-list-scroll">
+                  {notifications.length === 0 ? (
+                    <p className="notification-empty">{t('noNotifications') || 'No notifications yet.'}</p>
+                  ) : (
+                    notifications.slice(0, 8).map((item) => {
+                      const isUnread = !item.read
+                      const isIssue = item.linkType === 'issue' || item.type?.includes('issue')
+                      const isEvent = item.linkType === 'event' || item.type?.includes('event')
+                      return (
+                        <div
+                          key={item.id}
+                          className={`notification-item ${isUnread ? 'is-unread' : ''}`}
+                          onClick={() => handleNotificationClick(item)}
+                          role="button"
+                          tabIndex={0}
+                        >
+                          <span className={`mini-icon ${isIssue ? 'orange' : isEvent ? 'purple' : 'green'}`}>
+                            {isIssue ? <AlertCircle size={14} /> : isEvent ? <CalendarDays size={14} /> : <Bell size={14} />}
+                          </span>
+                          <div className="notification-item-text">
+                            <strong>{item.title || 'Notification'}</strong>
+                            <small>{item.message}</small>
+                          </div>
+                          {isUnread && <span className="unread-dot" />}
+                        </div>
+                      )
+                    })
+                  )}
+                </div>
+                {unreadCount > 0 && (
+                  <button className="popover-link" onClick={handleMarkAllRead}>
+                    {t('markAllRead') || 'Mark all as read'}
+                  </button>
+                )}
+              </div>
+            )}
+          </div>
           <button className="sidebar-utility" onClick={() => setSettingsOpen(true)}>
             <Settings size={16} /> {t('settings')}
           </button>
@@ -623,6 +713,17 @@ export default function StudentApp() {
                 অস
               </button>
             </div>
+            <button
+              className="student-mobile-btn student-mobile-notif-btn"
+              onClick={() => {
+                setNotificationsOpen(!notificationsOpen)
+                setSidebarOpen(true)
+              }}
+              aria-label="Notifications"
+            >
+              <Bell size={17} />
+              {unreadCount > 0 && <span className="student-mobile-notif-dot" />}
+            </button>
             <button className="student-mobile-new" onClick={startNewChat} aria-label={t('newChat')}>
               <Plus size={18} />
             </button>
