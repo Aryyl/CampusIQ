@@ -7,8 +7,245 @@
 .student-composer-area { position: absolute; z-index: 3; right: 0; bottom: 0; left: 0; display: flex; flex-direction: column; align-items: center; padding: 15px 24px 20px; background: linear-gradient(transparent, var(--student-bg) 25%); }.student-composer-shell { width: min(850px, 100%); padding: 10px 12px 9px 15px; border: 1px solid rgba(32,56,44,.13); border-radius: 17px; background: rgba(255,255,255,.82); box-shadow: 0 12px 35px #20382c12; backdrop-filter: blur(15px); transition: border .2s, box-shadow .2s; }.student-composer-area.focused .student-composer-shell { border-color: #7fa986; box-shadow: 0 0 0 3px #bbd5b733, 0 12px 35px #20382c12; }.student-composer-shell textarea { width: 100%; min-height: 25px; max-height: 130px; display: block; resize: none; border: 0; outline: 0; color: var(--student-ink); background: transparent; font: inherit; font-size: 12px; line-height: 1.5; }.student-composer-shell textarea::placeholder { color: #9aa89e; }.composer-toolbar { display: flex; align-items: center; justify-content: space-between; margin-top: 6px; }.composer-toolbar > div { display: flex; align-items: center; gap: 7px; }.composer-tool { width: 28px; height: 28px; display: grid; place-items: center; border-radius: 8px; color: #84948a; background: transparent; }.composer-tool:hover { color: var(--student-green); background: #eaf3e8; }.composer-hint { color: #9aa89e; font-size: 9px; }.send-button { width: 31px; height: 31px; display: grid; place-items: center; border-radius: 10px; color: #f7fbf5; background: var(--student-green); box-shadow: 0 5px 11px #183d3030; }.send-button:disabled { color: #aebbb0; background: #e3ebe2; box-shadow: none; cursor: not-allowed; }.send-loader { width: 12px; height: 12px; border: 2px solid #a6bea8; border-top-color: var(--student-green); border-radius: 50%; animation: student-spin .7s linear infinite; }@keyframes student-spin { to { transform: rotate(360deg); } }.attachment-chip { width: fit-content; display: flex; align-items: center; gap: 6px; margin-bottom: 7px; padding: 5px 7px; border-radius: 7px; color: #56735d; background: #e6f0e4; font-size: 9px; }.attachment-chip button { display: grid; place-items: center; padding: 1px; color: #819488; background: transparent; }.student-disclaimer { margin: 7px 0 0; color: #9aa69c; font-size: 9px; }.student-toast { position: fixed; z-index: 200; right: 24px; bottom: 24px; display: flex; align-items: center; gap: 7px; padding: 11px 13px; border-radius: 11px; color: #eff8ed; background: var(--student-green); box-shadow: 0 15px 30px #20382c28; font-size: 10px; animation: student-toast-in .2s ease-out; }@keyframes student-toast-in { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
 .student-dialog-backdrop { position: fixed; z-index: 150; inset: 0; display: grid; place-items: center; padding: 20px; background: #183d3040; backdrop-filter: blur(6px); }.student-dialog { width: min(100%, 430px); padding: 19px; border: 1px solid rgba(255,255,255,.9); border-radius: 18px; background: rgba(254,255,252,.97); box-shadow: 0 24px 60px #20382c26; animation: student-pop .18s ease-out; }.student-dialog-heading { display: flex; align-items: center; justify-content: space-between; padding-bottom: 14px; border-bottom: 1px solid var(--student-border); }.student-dialog-heading h2 { margin: 0; font: 700 18px Manrope, sans-serif; letter-spacing: -.5px; }.student-dialog-heading button { width: 28px; height: 28px; display: grid; place-items: center; border-radius: 8px; color: var(--student-muted); background: #edf4eb; }.student-dialog-input { width: 100%; height: 38px; margin-top: 18px; padding: 0 10px; border: 1px solid #b8cfb8; border-radius: 9px; outline: 0; color: var(--student-ink); background: #f8fbf7; font: inherit; font-size: 11px; }.student-dialog-copy { margin: 17px 0; color: var(--student-muted); font-size: 11px; line-height: 1.6; }.student-dialog-actions { display: flex; justify-content: flex-end; gap: 7px; margin-top: 20px; }.student-primary, .student-secondary, .student-danger { min-height: 34px; padding: 0 12px; border-radius: 9px; font-size: 10px; font-weight: 700; }.student-primary { color: #f7fbf5; background: var(--student-green); }.student-secondary { color: var(--student-muted); background: #edf4eb; }.student-danger { color: #fff7f5; background: #a54e47; }.settings-option { display: flex; align-items: center; justify-content: space-between; gap: 15px; padding: 16px 0; border-bottom: 1px solid var(--student-border); }.settings-option strong, .settings-option small { display: block; }.settings-option strong { font-size: 11px; }.settings-option small { margin-top: 4px; color: var(--student-muted); font-size: 9px; }.theme-switcher { display: flex; padding: 3px; border-radius: 9px; background: #eaf2e8; }.theme-switcher button { padding: 6px 8px; border-radius: 7px; color: var(--student-muted); background: transparent; font-size: 9px; }.theme-switcher button.active { color: var(--student-ink); background: white; box-shadow: 0 2px 6px #20382c12; }.preference-toggle { position: relative; width: 34px; height: 20px; padding: 0; border-radius: 20px; background: #cdd9ce; }.preference-toggle.active { background: var(--student-sage); }.preference-toggle i { position: absolute; top: 3px; left: 3px; width: 14px; height: 14px; border-radius: 50%; background: white; transition: .2s; }.preference-toggle.active i { transform: translateX(14px); }
 @keyframes student-pop { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
-@media (max-width: 850px) { .student-sidebar { position: fixed; z-index: 80; top: 0; bottom: 0; left: 0; transform: translateX(-102%); box-shadow: 15px 0 40px #20382c18; transition: transform .25s ease; }.student-sidebar.is-open { transform: translateX(0); }.student-sidebar-close { display: grid; }.student-drawer-backdrop { position: fixed; z-index: 70; inset: 0; border: 0; background: #183d3030; }.student-mobile-header { height: 61px; display: flex; align-items: center; justify-content: space-between; padding: 0 17px; border-bottom: 1px solid var(--student-border); color: var(--student-ink); background: rgba(255,255,255,.64); backdrop-filter: blur(16px); font: 800 17px Manrope, sans-serif; }.student-menu-button, .student-mobile-new { width: 32px; height: 32px; display: grid; place-items: center; border-radius: 9px; color: var(--student-muted); background: transparent; }.student-menu-button:hover, .student-mobile-new:hover { color: var(--student-green); background: #eaf3e8; }.student-conversation-wrap { min-height: 0; }.student-welcome { min-height: calc(100vh - 61px); padding-top: 38px; }.conversation-view { padding-top: 30px; } }
-@media (max-width: 600px) { .student-welcome, .conversation-view { width: calc(100% - 30px); }.student-welcome h1 { letter-spacing: -2px; }.welcome-copy { font-size: 12px; }.suggestion-grid { grid-template-columns: 1fr; margin-top: 26px; }.suggestion-card { min-height: 66px; }.student-composer-area { padding: 10px 12px 14px; }.composer-hint { display: none; }.student-disclaimer { text-align: center; line-height: 1.35; }.conversation-heading { margin-bottom: 25px; }.conversation-demo-label { display: none; }.user-bubble { max-width: 88%; }.assistant-row { gap: 8px; }.markdown-content { font-size: 11px; }.student-toast { right: 12px; bottom: 14px; left: 12px; justify-content: center; }.student-dialog-backdrop { padding: 12px; } }
+@media (max-width: 850px) {
+  /* ── 1. Hardened Solid Mobile Header (No Glass, No Bleed-Through) ── */
+  .student-mobile-header {
+    height: 61px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 16px;
+    border-bottom: 1.5px solid var(--student-border);
+    color: var(--student-ink);
+    background: #ffffff !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.04);
+    position: sticky;
+    top: 0;
+    z-index: 60;
+    font: 800 17px Manrope, sans-serif;
+  }
+  .student-mobile-header .brand-outline-pill {
+    background: #ffffff !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    border: 1px solid var(--student-border) !important;
+    box-shadow: none !important;
+  }
+  .student-lang-pill.compact {
+    background: #eef4ec !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+  }
+  .student-menu-button,
+  .student-mobile-new,
+  .student-mobile-btn {
+    width: 34px;
+    height: 34px;
+    display: grid;
+    place-items: center;
+    border-radius: 9px;
+    color: var(--student-muted);
+    background: #f4f8f3;
+  }
+  .student-menu-button:hover,
+  .student-mobile-new:hover,
+  .student-mobile-btn:hover {
+    color: var(--student-green);
+    background: #e5f0e3;
+  }
+
+  /* ── 2. Solid Mobile Sidebar & Drawer ── */
+  .student-sidebar {
+    position: fixed;
+    z-index: 100;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    width: 285px;
+    background: #ffffff !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    transform: translateX(-102%);
+    box-shadow: 15px 0 40px rgba(24, 61, 48, 0.22);
+    transition: transform 0.25s ease;
+  }
+  .student-sidebar.is-open {
+    transform: translateX(0);
+  }
+  .student-sidebar-close {
+    display: grid;
+  }
+  .student-drawer-backdrop {
+    position: fixed;
+    z-index: 90;
+    inset: 0;
+    border: 0;
+    background: rgba(18, 38, 28, 0.5) !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+  }
+
+  /* ── 3. Solid Chat Composer (No Bleed-Through or Overlap) ── */
+  .student-main {
+    height: 100vh;
+    overflow: hidden;
+  }
+  .student-conversation-wrap {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-y: auto;
+  }
+  .student-composer-area {
+    position: relative !important;
+    bottom: auto !important;
+    left: auto !important;
+    right: auto !important;
+    z-index: 40;
+    background: #ffffff !important;
+    border-top: 1.5px solid var(--student-border) !important;
+    padding: 10px 14px 14px;
+    box-shadow: 0 -3px 12px rgba(0, 0, 0, 0.03);
+  }
+  .student-composer-shell {
+    background: #f8faf7 !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    border: 1.5px solid var(--student-border) !important;
+    box-shadow: none !important;
+  }
+  .conversation-view {
+    padding-top: 24px;
+    padding-bottom: 24px;
+  }
+  .student-welcome {
+    min-height: calc(100vh - 61px);
+    padding-top: 28px;
+    padding-bottom: 30px;
+  }
+
+  /* ── 4. Solid Popovers & Menus ── */
+  .student-notif-popover {
+    background: #ffffff !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    border: 1.5px solid var(--student-border) !important;
+    box-shadow: 0 16px 40px rgba(0, 0, 0, 0.18) !important;
+    z-index: 110 !important;
+  }
+  .conversation-menu,
+  .student-profile-menu {
+    background: #ffffff !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    border: 1.5px solid var(--student-border) !important;
+    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.14) !important;
+    z-index: 95 !important;
+  }
+
+  /* ── 5. Clean Modal Overlays ── */
+  .student-dialog-backdrop,
+  .ev-modal-backdrop,
+  .sn-modal-backdrop,
+  .cc-lightbox {
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    background: rgba(18, 38, 28, 0.6) !important;
+    z-index: 200 !important;
+  }
+  .student-dialog,
+  .sn-modal,
+  .ev-modal {
+    background: #ffffff !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    border: 1px solid var(--student-border);
+    box-shadow: 0 24px 60px rgba(0, 0, 0, 0.25) !important;
+  }
+}
+
+@media (max-width: 600px) {
+  .student-welcome,
+  .conversation-view {
+    width: calc(100% - 24px);
+  }
+  .student-welcome h1 {
+    letter-spacing: -1.5px;
+  }
+  .welcome-copy {
+    font-size: 12px;
+  }
+  .suggestion-grid {
+    grid-template-columns: 1fr;
+    margin-top: 20px;
+  }
+  .suggestion-card {
+    min-height: 64px;
+    background: #ffffff;
+    border: 1px solid var(--student-border);
+  }
+  .student-composer-area {
+    padding: 8px 10px 12px;
+  }
+  .composer-hint {
+    display: none;
+  }
+  .student-disclaimer {
+    text-align: center;
+    line-height: 1.35;
+  }
+  .conversation-heading {
+    margin-bottom: 20px;
+  }
+  .conversation-demo-label {
+    display: none;
+  }
+  .user-bubble {
+    max-width: 88%;
+  }
+  .assistant-row {
+    gap: 8px;
+  }
+  .markdown-content {
+    font-size: 11px;
+  }
+  .student-toast {
+    right: 12px;
+    bottom: 14px;
+    left: 12px;
+    justify-content: center;
+  }
+  .student-dialog-backdrop {
+    padding: 12px;
+  }
+  .cc-raise-container,
+  .cc-my-issues-container,
+  .cc-ticket-detail {
+    width: calc(100% - 24px);
+    padding: 20px 0 40px;
+  }
+  .student-events-view {
+    width: calc(100% - 24px);
+    padding: 16px 0 60px;
+  }
+  .ev-card {
+    flex-direction: column;
+    gap: 12px;
+    padding: 14px;
+    background: #ffffff !important;
+    border: 1.5px solid var(--student-border) !important;
+  }
+  .ev-card-poster {
+    width: 100%;
+    height: 160px;
+  }
+  .ev-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+}
 
 .markdown-content table { width: 100%; margin: 12px 0 16px; border-collapse: collapse; border: 1px solid #d8e6d6; border-radius: 9px; font-size: 10px; }.markdown-content th, .markdown-content td { padding: 8px 9px; border-bottom: 1px solid #d8e6d6; text-align: left; }.markdown-content th { color: var(--student-ink); background: #e8f1e6; font-weight: 800; }.markdown-content tr:last-child td { border-bottom: 0; }
 
@@ -2982,6 +3219,28 @@
   .cc-uploader { padding: 0.75rem 1rem; }
   .cc-results { padding: 0.5rem 1rem; }
   .cc-roles-grid { grid-template-columns: 1fr; }
-  .cc-score-strip { flex-direction: column; align-items: flex-start; gap: 1rem; }
-  .cc-score-stats { margin-left: 0; }
+  .cc-score-strip {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+    background: #ffffff !important;
+  }
+  .cc-score-stats {
+    width: 100%;
+    justify-content: space-around;
+    margin-left: 0;
+  }
+  .cc-skills-section,
+  .cc-roles-section,
+  .cc-roadmap-section,
+  .cc-role-card {
+    background: #ffffff !important;
+    backdrop-filter: none !important;
+  }
+  .cc-samples {
+    gap: 6px;
+  }
+  .cc-sample-btn {
+    padding: 0.3rem 0.75rem;
+  }
 }

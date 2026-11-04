@@ -586,6 +586,65 @@ h1 { margin: 0; color: var(--ink); font: 700 clamp(35px, 4.8vw, 64px)/1.04 Manro
   .nav-mobile-toggle {
     display: grid;
   }
+
+  /* ── Mobile Admin Navigation (Eliminate All Glass Effects) ── */
+  .brand-outline-pill {
+    background: #ffffff !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    border: 1.5px solid rgba(32, 56, 44, 0.15) !important;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04) !important;
+  }
+  .nav-action-capsule,
+  .nav-action-circle,
+  .nav-mobile-toggle {
+    background: #ffffff !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    border: 1.5px solid rgba(32, 56, 44, 0.15) !important;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04) !important;
+  }
+  .mobile-nav-drawer {
+    background: #ffffff !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    border: 1.5px solid var(--line) !important;
+    box-shadow: 0 16px 40px rgba(24, 61, 48, 0.18) !important;
+    z-index: 130 !important;
+  }
+  .popover {
+    background: #ffffff !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    border: 1.5px solid var(--line) !important;
+    box-shadow: 0 18px 45px rgba(24, 61, 48, 0.2) !important;
+    z-index: 140 !important;
+  }
+  .auth-card {
+    background: #ffffff !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    border: 1.5px solid var(--line) !important;
+    box-shadow: 0 16px 45px rgba(24, 61, 48, 0.14) !important;
+  }
+  .auth-role-track {
+    background: #edf4ec !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+  }
+  .modal-backdrop {
+    background: rgba(18, 38, 28, 0.6) !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    z-index: 200 !important;
+  }
+  .modal-card {
+    background: #ffffff !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    border: 1.5px solid var(--line) !important;
+    box-shadow: 0 24px 60px rgba(0, 0, 0, 0.25) !important;
+  }
 }
 
 @media (max-width: 480px) {
@@ -615,7 +674,7 @@ h1 { margin: 0; color: var(--ink); font: 700 clamp(35px, 4.8vw, 64px)/1.04 Manro
 .notice-file-icon { color: #a9783f; background: #f8ecd4; }.status-badge.important, .status-badge.high { color: #a25d42; background: #f9e4d9; }.status-badge.normal { color: #667b6d; background: #e7eee7; }.status-badge.low { color: #6b8090; background: #e6eef1; }.status-badge.uploaded { color: #647b71; background: #e5eee7; }.notice-preview-card { padding: 20px; border: 1px solid #eadfbd; border-radius: 17px; background: linear-gradient(145deg, #f8f1df, #f2ead5); }.notice-preview-top { display: flex; align-items: center; justify-content: space-between; color: #94866a; font-size: 10px; }.notice-preview-card h3 { margin: 17px 0 9px; font: 700 21px/1.2 Manrope, sans-serif; letter-spacing: -.7px; }.notice-preview-card p { max-width: 540px; margin: 0; color: #6f7569; font-size: 12px; line-height: 1.65; }.notice-preview-meta { display: flex; flex-wrap: wrap; gap: 7px; margin-top: 22px; padding-top: 13px; border-top: 1px solid rgba(127,112,70,.16); }.notice-preview-meta span { padding: 5px 8px; border-radius: 7px; color: #897955; background: rgba(255,255,255,.5); font-size: 9px; }
 .deadline-workspace { display: grid; grid-template-columns: 1.2fr .8fr; gap: 14px; margin-top: 18px; }.calendar-panel, .selected-day-panel, .deadline-list-panel { padding: 18px; border: 1px solid var(--line); border-radius: 17px; background: rgba(247,250,245,.52); }.calendar-panel-header, .selected-day-heading, .deadline-list-heading { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }.calendar-panel h2, .selected-day-panel h2, .deadline-list-panel h2 { margin: 7px 0 0; font: 700 18px/1.2 Manrope, sans-serif; letter-spacing: -.6px; }.calendar-nav { display: flex; align-items: center; gap: 4px; }.calendar-nav button { width: 29px; height: 29px; display: grid; place-items: center; border-radius: 8px; color: #6b7e70; background: #e9f1e7; font-size: 9px; font-weight: 700; }.calendar-nav button:hover { color: var(--green); background: #dcebd9; }.calendar-nav button:nth-child(2) { width: auto; padding: 0 8px; }.calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); text-align: center; }.calendar-weekdays { margin-top: 22px; color: #96a399; font-size: 8px; font-weight: 800; text-transform: uppercase; }.calendar-month-days { margin-top: 7px; gap: 4px; }.calendar-month-days button { position: relative; min-height: 39px; border-radius: 9px; color: #54685a; background: transparent; font-size: 10px; }.calendar-month-days button:hover { background: #e5f0e2; }.calendar-month-days button.outside-month { color: #b6c0b8; }.calendar-month-days button.selected-day { color: #fff; background: var(--green); box-shadow: 0 5px 10px #183d3030; }.calendar-month-days button.today-day:not(.selected-day) { box-shadow: inset 0 0 0 1px #6d9b78; }.calendar-event-dot { position: absolute; bottom: 5px; left: 50%; width: 4px; height: 4px; border-radius: 50%; background: #d49a4c; transform: translateX(-50%); }.calendar-month-days button.selected-day .calendar-event-dot { background: #b9dfb6; }.calendar-legend { display: flex; gap: 15px; margin-top: 15px; color: #8a998e; font-size: 9px; }.calendar-legend span { display: flex; align-items: center; gap: 5px; }.legend-dot { width: 6px; height: 6px; border-radius: 50%; background: #d49a4c; }.legend-dot.today { background: #6d9b78; }.selected-day-panel { min-height: 320px; }.selected-events { display: grid; gap: 8px; margin-top: 20px; }.selected-day-panel .data-empty { min-height: 220px; }.deadline-lists { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-top: 14px; }.deadline-list-heading { align-items: center; }.deadline-list-heading span { min-width: 24px; height: 24px; display: grid; place-items: center; border-radius: 8px; color: #5a7c62; background: #e1efdf; font-size: 10px; font-weight: 800; }.deadline-items { display: grid; gap: 2px; margin-top: 12px; }.deadline-list-item { display: flex; align-items: center; gap: 8px; padding: 10px 0; border-top: 1px solid var(--line); }.deadline-date-large { width: 43px; padding: 7px 4px; border-radius: 8px; color: #4a8055; background: #e3f1e1; text-align: center; font-size: 9px; font-weight: 800; }.deadline-date-large.expired { color: #a35b50; background: #f8e2df; }.deadline-item-content { flex: 1; min-width: 0; }.deadline-item-content strong, .deadline-item-content small { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }.deadline-item-content strong { color: var(--ink); font-size: 10px; }.deadline-item-content small { margin-top: 3px; color: #87958b; font-size: 9px; }.deadline-list-item .row-actions { gap: 0; }.deadline-list-item .row-actions button { width: 25px; height: 25px; }.list-empty { min-height: 100px; display: grid; place-items: center; color: #9aa79d; font-size: 10px; }.deadline-detail-card { padding: 17px; border-radius: 15px; background: #edf5eb; }.deadline-detail-card p { margin: 13px 0 0; color: #6f7f73; font-size: 11px; line-height: 1.55; }.deadline-detail-card .detail-grid { padding-top: 15px; }
 
-@media (max-width: 760px) { .module-page { padding-top: 43px; }.module-heading { display: block; }.module-heading-actions { margin-top: 20px; }.module-heading-actions > * { flex: 1; }.module-stat-strip { grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 25px; }.module-panel { padding: 14px; }.search-filters { align-items: stretch; flex-direction: column; }.module-search { max-width: none; }.filter-controls { justify-content: flex-start; }.filter-controls select { flex: 1; min-width: 0; }.form-grid { grid-template-columns: 1fr; }.modal-backdrop { padding: 10px; }.modal-heading, .modal-body, .modal-footer { padding-left: 16px; padding-right: 16px; } }
+@media (max-width: 760px) { .module-page { padding-top: 43px; }.module-heading { display: block; }.module-heading-actions { margin-top: 20px; }.module-heading-actions > * { flex: 1; }.module-stat-strip { grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 25px; }.module-stat { background: #ffffff !important; }.module-panel { padding: 14px; background: #ffffff !important; }.search-filters { align-items: stretch; flex-direction: column; }.module-search { max-width: none; background: #f7faf5 !important; }.filter-controls { justify-content: flex-start; }.filter-controls select { flex: 1; min-width: 0; background: #f7faf5 !important; }.form-grid { grid-template-columns: 1fr; }.modal-backdrop { padding: 10px; }.modal-heading, .modal-body, .modal-footer { padding-left: 16px; padding-right: 16px; } }
 @media (max-width: 760px) { .deadline-workspace, .deadline-lists { grid-template-columns: 1fr; }.calendar-panel, .selected-day-panel, .deadline-list-panel { padding: 14px; } }
 @media (max-width: 400px) { .module-stat-strip { grid-template-columns: 1fr; }.module-heading-actions { flex-direction: column; }.module-heading-actions > * { width: 100%; }.detail-grid { grid-template-columns: 1fr; } }
 
