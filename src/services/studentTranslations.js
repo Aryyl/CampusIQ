@@ -240,6 +240,25 @@ export const studentTranslations = {
     markAllRead: 'Mark all as read',
 
     // ── Notices ──
+    // ── Career Compass ──
+    careerCompass: 'Career Compass',
+    careerAndGrowth: 'Career & Growth',
+    careerSubtitle: 'AI Resume Analyzer & Career Roadmap',
+    uploadResumePrompt: 'Upload your resume or paste its text to get a personalized career plan.',
+    detectedSkills: 'Detected Skills',
+    matchedRoles: 'Recommended Roles',
+    matchScore: 'Fit Score',
+    missingKeywords: 'Missing Skills',
+    careerRoadmap: 'Actionable Roadmap',
+    readRoadmapAloud: 'Listen to Roadmap',
+    stopAudio: 'Stop Audio',
+    phase1Title: 'Phase 1: Foundation (30 Days)',
+    phase2Title: 'Phase 2: Projects & Certifications',
+    phase3Title: 'Phase 3: Placement Readiness',
+    targetRoleSimulator: 'Target Role Simulator',
+    salaryRange: 'Expected Salary Bracket',
+    sampleResumes: 'Try Sample Resume',
+
     noticesSection: 'Notice Board',
     noticesSubtitle: 'Official Announcements',
     noticesDesc: 'Stay informed with official university announcements and circulars.',
@@ -486,6 +505,25 @@ export const studentTranslations = {
     markAllRead: 'সকলো পঢ়া বুলি চিহ্নিত কৰক',
 
     // ── Notices ──
+    // ── Career Compass ──
+    careerCompass: 'কেৰিয়াৰ কম্পাছ',
+    careerAndGrowth: 'কেৰিয়াৰ আৰু বিকাশ',
+    careerSubtitle: 'AI ৰিজ্যুম বিশ্লেষক আৰু কেৰিয়াৰ ৰোডমেপ',
+    uploadResumePrompt: 'ব্যক্তিগত কেৰিয়াৰ পৰিকল্পনাৰ বাবে আপোনাৰ ৰিজ্যুম আপলোড কৰক বা লিখক।',
+    detectedSkills: 'চিনাক্ত কৰা দক্ষতাসমূহ',
+    matchedRoles: 'পৰামৰ্শিত চাকৰিসমূহ',
+    matchScore: 'উপযোগিতা স্কোৰ',
+    missingKeywords: 'অনুপস্থিত দক্ষতাসমূহ',
+    careerRoadmap: 'কাৰ্যকৰী কেৰিয়াৰ ৰোডমেপ',
+    readRoadmapAloud: 'ৰোডমেপ শুনক',
+    stopAudio: 'অডিঅ বন্ধ কৰক',
+    phase1Title: 'প্ৰথম পৰ্যায়: মূল ভিত্তি (৩০ দিন)',
+    phase2Title: 'দ্বিতীয় পৰ্যায়: প্ৰকল্প আৰু প্ৰমাণপত্ৰ',
+    phase3Title: 'তৃতীয় পৰ্যায়: নিযুক্তি প্ৰস্তুতি',
+    targetRoleSimulator: 'লক্ষ্য নিৰ্ধাৰণ ছিমুলেটৰ',
+    salaryRange: 'সম্ভাব্য দৰমহা পৰিসৰ',
+    sampleResumes: 'নমুনা ৰিজ্যুম চাওক',
+
     noticesSection: 'জাননী বোৰ্ড',
     noticesSubtitle: 'চৰকাৰী ঘোষণাসমূহ',
     noticesDesc: 'বিশ্ববিদ্যালয়ৰ চৰকাৰী ঘোষণা আৰু চাৰ্কুলাৰ পঢ়ক।',

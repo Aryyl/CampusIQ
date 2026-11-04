@@ -9,6 +9,7 @@ import {
   ChevronDown,
   ClipboardList,
   Clipboard,
+  Compass,
   Edit3,
   FileText,
   Forward,
@@ -47,6 +48,7 @@ import RaiseIssueView from './components/campuscare/RaiseIssueView'
 import MyIssuesView from './components/campuscare/MyIssuesView'
 import StudentEventsView from './components/events/StudentEventsView'
 import StudentNoticesView from './components/notices/StudentNoticesView'
+import CareerCompassView from './components/career/CareerCompassView'
 import { markAllAsRead, markAsRead, subscribeNotifications } from './services/notificationService'
 import './student.css'
 
@@ -82,7 +84,7 @@ export default function StudentApp() {
   const [notice, setNotice] = useState('')
   const [inputFocused, setInputFocused] = useState(false)
   const [isListening, setIsListening] = useState(false)
-  const [activeView, setActiveView] = useState('chat') // 'chat' | 'raise-issue' | 'my-issues' | 'events' | 'notices'
+  const [activeView, setActiveView] = useState('chat') // 'chat' | 'raise-issue' | 'my-issues' | 'events' | 'notices' | 'career'
   const [notifications, setNotifications] = useState([])
   const [notificationsOpen, setNotificationsOpen] = useState(false)
 
@@ -535,6 +537,12 @@ export default function StudentApp() {
           >
             <Megaphone size={15} /> {t('noticesSection') || 'Notices'}
           </button>
+          <button
+            className={`campuscare-nav-btn ${activeView === 'career' ? 'active' : ''}`}
+            onClick={() => { setActiveView('career'); setSidebarOpen(false) }}
+          >
+            <Compass size={15} /> {t('careerCompass') || 'Career Compass'}
+          </button>
         </div>
 
         {/* CampusCare Navigation */}
@@ -749,6 +757,12 @@ export default function StudentApp() {
             />
           ) : activeView === 'notices' ? (
             <StudentNoticesView
+              student={student}
+              t={t}
+              currentLang={currentLang}
+            />
+          ) : activeView === 'career' ? (
+            <CareerCompassView
               student={student}
               t={t}
               currentLang={currentLang}
