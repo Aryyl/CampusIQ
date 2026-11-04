@@ -1,4 +1,4 @@
-# CampusIQ - AI-Powered Bilingual University Portal and Admin Dashboard
+# CampusIQ: AI-Powered Bilingual University Portal and Admin Dashboard
 
 CampusIQ is an enterprise-grade bilingual university portal, administrative operating system, campus issue resolution system (CampusCare), official notice board, career roadmap analyzer (Career Compass), and events management platform.
 
