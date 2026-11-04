@@ -17,6 +17,7 @@ import {
   LogOut,
   Menu,
   MessageCircle,
+  Megaphone,
   Mic,
   MicOff,
   MoreHorizontal,
@@ -45,6 +46,7 @@ import { getStudentTranslation, studentTranslations } from './services/studentTr
 import RaiseIssueView from './components/campuscare/RaiseIssueView'
 import MyIssuesView from './components/campuscare/MyIssuesView'
 import StudentEventsView from './components/events/StudentEventsView'
+import StudentNoticesView from './components/notices/StudentNoticesView'
 import { markAllAsRead, markAsRead, subscribeNotifications } from './services/notificationService'
 import './student.css'
 
@@ -80,7 +82,7 @@ export default function StudentApp() {
   const [notice, setNotice] = useState('')
   const [inputFocused, setInputFocused] = useState(false)
   const [isListening, setIsListening] = useState(false)
-  const [activeView, setActiveView] = useState('chat') // 'chat' | 'raise-issue' | 'my-issues'
+  const [activeView, setActiveView] = useState('chat') // 'chat' | 'raise-issue' | 'my-issues' | 'events' | 'notices'
   const [notifications, setNotifications] = useState([])
   const [notificationsOpen, setNotificationsOpen] = useState(false)
 
@@ -105,6 +107,8 @@ export default function StudentApp() {
       setActiveView('my-issues')
     } else if (item.linkType === 'event' || item.type?.includes('event')) {
       setActiveView('events')
+    } else if (item.linkType === 'notice' || item.type?.includes('notice')) {
+      setActiveView('notices')
     }
   }
 
@@ -525,6 +529,12 @@ export default function StudentApp() {
           >
             <CalendarDays size={15} /> {t('eventsSection') || 'Events'}
           </button>
+          <button
+            className={`campuscare-nav-btn ${activeView === 'notices' ? 'active' : ''}`}
+            onClick={() => { setActiveView('notices'); setSidebarOpen(false) }}
+          >
+            <Megaphone size={15} /> {t('noticesSection') || 'Notices'}
+          </button>
         </div>
 
         {/* CampusCare Navigation */}
@@ -733,6 +743,12 @@ export default function StudentApp() {
         <div className="student-conversation-wrap">
           {activeView === 'events' ? (
             <StudentEventsView
+              student={student}
+              t={t}
+              currentLang={currentLang}
+            />
+          ) : activeView === 'notices' ? (
+            <StudentNoticesView
               student={student}
               t={t}
               currentLang={currentLang}

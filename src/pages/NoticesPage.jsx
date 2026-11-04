@@ -1,9 +1,9 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { Archive, Bell, Edit3, Eye, Megaphone, Plus, Send, Trash2 } from 'lucide-react'
-import { useCampusData } from '../context/CampusDataContext'
 import { ConfirmDialog, EmptyState, FormField, Modal, PageStatStrip, Pagination, SearchFilters, SortButton, StatusBadge } from '../components/ManagementUI'
 import { formatDate } from '../utils/formatters'
 import { nowIso } from '../utils/ids'
+import { createNotice, updateNotice, deleteNotice, subscribeAllNotices } from '../services/noticeService'
 
 const PAGE_SIZE = 6
 const categories = ['Examinations', 'Admissions', 'Scholarships', 'Academic events', 'Other']
@@ -14,8 +14,9 @@ const emptyNotice = { title: '', description: '', category: '', priority: 'Norma
 
 function dateInputValue(value) { return value ? new Date(value).toISOString().slice(0, 10) : '' }
 
-export default function NoticesPage({ notify }) {
-  const { notices, loading, saveNotice, deleteNotice } = useCampusData()
+export default function NoticesPage({ notify, currentUser }) {
+  const [notices, setNotices] = useState([])
+  const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
   const [status, setStatus] = useState('')
   const [priority, setPriority] = useState('')
@@ -27,6 +28,17 @@ export default function NoticesPage({ notify }) {
   const [errors, setErrors] = useState({})
   const [confirmNotice, setConfirmNotice] = useState(null)
   const [previewNotice, setPreviewNotice] = useState(null)
+  const [saving, setSaving] = useState(false)
+
+  useEffect(() => {
+    const unsub = subscribeAllNotices((items) => {
+      setNotices(items)
+      setLoading(false)
+    })
+    return () => unsub()
+  }, [])
+
+  const adminInfo = { uid: currentUser?.uid || null, name: currentUser?.displayName || currentUser?.name || 'Admin' }
 
   const filteredNotices = useMemo(() => {
     const query = search.trim().toLowerCase()
@@ -40,6 +52,7 @@ export default function NoticesPage({ notify }) {
       return comparison * (sort.direction === 'asc' ? 1 : -1)
     })
   }, [notices, search, status, priority, department, sort])
+
   const pageCount = Math.max(1, Math.ceil(filteredNotices.length / PAGE_SIZE))
   const visibleNotices = filteredNotices.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE)
   const hasFilters = Boolean(search || status || priority || department)
@@ -49,6 +62,7 @@ export default function NoticesPage({ notify }) {
   const updateForm = (key, value) => setForm((current) => ({ ...current, [key]: value }))
   const openAdd = () => { setForm({ ...emptyNotice, publicationDate: nowIso() }); setErrors({}); setModal('add') }
   const openEdit = (notice) => { setForm({ ...notice }); setErrors({}); setModal('edit') }
+
   const validate = () => {
     const nextErrors = {}
     if (!form.title.trim()) nextErrors.title = 'Enter a notice title.'
@@ -61,21 +75,47 @@ export default function NoticesPage({ notify }) {
     setErrors(nextErrors)
     return Object.keys(nextErrors).length === 0
   }
+
   const submit = async (event) => {
     event.preventDefault()
     if (!validate()) return
     const intent = event.nativeEvent.submitter?.name
     const nextStatus = intent === 'publish' ? 'Published' : intent === 'saveDraft' ? 'Draft' : form.status
+    setSaving(true)
     try {
-      await saveNotice({ ...form, status: nextStatus })
+      if (modal === 'edit' && form.id) {
+        const previousStatus = notices.find((n) => n.id === form.id)?.status || null
+        await updateNotice(form.id, { ...form, status: nextStatus }, adminInfo, previousStatus)
+      } else {
+        await createNotice({ ...form, status: nextStatus }, adminInfo)
+      }
       setModal(null)
       notify(nextStatus === 'Published' ? 'Notice published.' : 'Notice saved as draft.')
     } catch (error) {
       notify(`Could not save notice: ${error.message}`)
+    } finally {
+      setSaving(false)
     }
   }
-  const changeStatus = async (notice, nextStatus) => { try { await saveNotice({ ...notice, status: nextStatus }); notify(`Notice ${nextStatus.toLowerCase()}.`) } catch (error) { notify(`Could not update notice: ${error.message}`) } }
-  const confirmDelete = async () => { try { await deleteNotice(confirmNotice); setConfirmNotice(null); notify('Notice deleted.') } catch (error) { notify(`Could not delete notice: ${error.message}`) } }
+
+  const changeStatus = async (notice, nextStatus) => {
+    try {
+      await updateNotice(notice.id, { ...notice, status: nextStatus }, adminInfo, notice.status)
+      notify(`Notice ${nextStatus.toLowerCase()}.`)
+    } catch (error) {
+      notify(`Could not update notice: ${error.message}`)
+    }
+  }
+
+  const confirmDelete = async () => {
+    try {
+      await deleteNotice(confirmNotice.id)
+      setConfirmNotice(null)
+      notify('Notice deleted.')
+    } catch (error) {
+      notify(`Could not delete notice: ${error.message}`)
+    }
+  }
 
   return <section className="module-page">
     <div className="module-heading"><div><p className="eyebrow"><span className="live-dot" /> Stay informed</p><h1>Notices</h1><p className="hero-subtitle">Create and publish official announcements for the CampusIQ community.</p></div><button className="primary-button" onClick={openAdd}><Plus size={16} /> Create notice</button></div>
@@ -85,10 +125,10 @@ export default function NoticesPage({ notify }) {
       {loading ? <div className="table-loading">Loading notices...</div> : filteredNotices.length === 0 ? <EmptyState icon={Bell} title="No notices found" description="Create a notice or adjust the filters to see announcements." action="Create notice" onAction={openAdd} /> : <div className="data-table-wrap"><table className="data-table"><thead><tr><th>Notice</th><th>Category</th><th>Priority</th><th>Audience</th><th>Expiry</th><th>Status</th><th><span className="sr-only">Actions</span></th></tr></thead><tbody>{visibleNotices.map((notice) => <tr key={notice.id}><td><div className="table-person"><span className="table-file-icon notice-file-icon"><Megaphone size={15} /></span><div><strong>{notice.title}</strong><small>{formatDate(notice.publicationDate)} · {notice.department}</small></div></div></td><td>{notice.category}</td><td><StatusBadge tone={notice.priority.toLowerCase()}>{notice.priority}</StatusBadge></td><td>{notice.targetAudience}</td><td>{formatDate(notice.expiryDate)}</td><td><StatusBadge tone={notice.status.toLowerCase()}>{notice.status}</StatusBadge></td><td><div className="row-actions"><button onClick={() => setPreviewNotice(notice)} aria-label={`Preview ${notice.title}`}><Eye size={15} /></button><button onClick={() => openEdit(notice)} aria-label={`Edit ${notice.title}`}><Edit3 size={15} /></button>{notice.status === 'Draft' && <button onClick={() => changeStatus(notice, 'Published')} aria-label={`Publish ${notice.title}`}><Send size={15} /></button>}{notice.status === 'Published' && <button onClick={() => changeStatus(notice, 'Archived')} aria-label={`Archive ${notice.title}`}><Archive size={15} /></button>}<button className="danger-action" onClick={() => setConfirmNotice(notice)} aria-label={`Delete ${notice.title}`}><Trash2 size={15} /></button></div></td></tr>)}</tbody></table></div>}
       <Pagination page={Math.min(page, pageCount)} pageCount={pageCount} onPageChange={setPage} />
     </article>
-    <Modal open={Boolean(modal)} onClose={() => setModal(null)} title={modal === 'edit' ? 'Edit notice' : 'Create notice'} eyebrow="Notice board" wide footer={<><button className="secondary-button" onClick={() => setModal(null)}>Cancel</button><button className="secondary-button" form="notice-form" name="saveDraft">Save draft</button><button className="primary-button" form="notice-form" name="publish">{form.status === 'Published' ? 'Publish notice' : 'Save notice'}</button></>}>
+    <Modal open={Boolean(modal)} onClose={() => setModal(null)} title={modal === 'edit' ? 'Edit notice' : 'Create notice'} eyebrow="Notice board" wide footer={<><button className="secondary-button" onClick={() => setModal(null)}>Cancel</button><button className="secondary-button" form="notice-form" name="saveDraft" disabled={saving}>Save draft</button><button className="primary-button" form="notice-form" name="publish" disabled={saving}>{form.status === 'Published' ? 'Update notice' : 'Publish notice'}</button></>}>
       <form id="notice-form" className="form-grid" onSubmit={submit} noValidate><FormField label="Title" required error={errors.title}><input value={form.title} onChange={(event) => updateForm('title', event.target.value)} placeholder="End Semester Examination Schedule" /></FormField><FormField label="Category" required error={errors.category}><select value={form.category} onChange={(event) => updateForm('category', event.target.value)}><option value="">Select category</option>{categories.map((item) => <option key={item}>{item}</option>)}</select></FormField><FormField label="Description" required error={errors.description}><textarea value={form.description} onChange={(event) => updateForm('description', event.target.value)} placeholder="Write the official announcement..." /></FormField><FormField label="Priority"><select value={form.priority} onChange={(event) => updateForm('priority', event.target.value)}>{priorities.map((item) => <option key={item}>{item}</option>)}</select></FormField><FormField label="Target audience"><input value={form.targetAudience} onChange={(event) => updateForm('targetAudience', event.target.value)} placeholder="All students" /></FormField><FormField label="Department" required error={errors.department}><select value={form.department} onChange={(event) => updateForm('department', event.target.value)}><option value="">Select department</option>{departments.map((item) => <option key={item}>{item}</option>)}</select></FormField><FormField label="Publication date" required error={errors.publicationDate}><input type="date" value={dateInputValue(form.publicationDate)} onChange={(event) => updateForm('publicationDate', new Date(`${event.target.value}T12:00:00`).toISOString())} /></FormField><FormField label="Expiry date" required error={errors.expiryDate}><input type="date" value={dateInputValue(form.expiryDate)} onChange={(event) => updateForm('expiryDate', new Date(`${event.target.value}T12:00:00`).toISOString())} /></FormField></form>
     </Modal>
     <Modal open={Boolean(previewNotice)} onClose={() => setPreviewNotice(null)} title={previewNotice?.title || 'Notice preview'} eyebrow="Student-facing preview"><div className="notice-preview-card"><div className="notice-preview-top"><StatusBadge tone={previewNotice?.priority?.toLowerCase()}>{previewNotice?.priority}</StatusBadge><span>{previewNotice && formatDate(previewNotice.publicationDate)}</span></div><h3>{previewNotice?.title}</h3><p>{previewNotice?.description}</p><div className="notice-preview-meta"><span>{previewNotice?.category}</span><span>{previewNotice?.department}</span><span>Expires {previewNotice && formatDate(previewNotice.expiryDate)}</span></div></div><div className="modal-actions"><button className="secondary-button" onClick={() => setPreviewNotice(null)}>Close preview</button></div></Modal>
-    <ConfirmDialog open={Boolean(confirmNotice)} title="Delete notice?" description={`This will remove ${confirmNotice?.title || 'this notice'} from the local notice board.`} onCancel={() => setConfirmNotice(null)} onConfirm={confirmDelete} />
+    <ConfirmDialog open={Boolean(confirmNotice)} title="Delete notice?" description={`This will permanently remove "${confirmNotice?.title || 'this notice'}" from the notice board.`} onCancel={() => setConfirmNotice(null)} onConfirm={confirmDelete} />
   </section>
 }

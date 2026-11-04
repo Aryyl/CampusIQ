@@ -238,6 +238,18 @@ export const studentTranslations = {
     notificationsAllRead: 'All caught up',
     noNotifications: 'No notifications yet.',
     markAllRead: 'Mark all as read',
+
+    // ── Notices ──
+    noticesSection: 'Notice Board',
+    noticesSubtitle: 'Official Announcements',
+    noticesDesc: 'Stay informed with official university announcements and circulars.',
+    allNotices: 'All',
+    importantNotices: 'Important',
+    noNotices: 'No notices published yet.',
+    urgentNoticeLabel: 'Important Notice',
+    expiresOn: 'Expires',
+    publishedOn: 'Published',
+    noticeAudience: 'Audience',
   },
 
   as: {
@@ -472,6 +484,18 @@ export const studentTranslations = {
     notificationsAllRead: 'সকলো পঢ়া হ\'ল',
     noNotifications: 'এতিয়ালৈকে কোনো জাননী নাই।',
     markAllRead: 'সকলো পঢ়া বুলি চিহ্নিত কৰক',
+
+    // ── Notices ──
+    noticesSection: 'জাননী বোৰ্ড',
+    noticesSubtitle: 'চৰকাৰী ঘোষণাসমূহ',
+    noticesDesc: 'বিশ্ববিদ্যালয়ৰ চৰকাৰী ঘোষণা আৰু চাৰ্কুলাৰ পঢ়ক।',
+    allNotices: 'সকলো',
+    importantNotices: 'গুৰুত্বপূৰ্ণ',
+    noNotices: 'এতিয়ালৈকে কোনো জাননী প্ৰকাশ পোৱা নাই।',
+    urgentNoticeLabel: 'জৰুৰী জাননী',
+    expiresOn: 'মেয়াদ উকলিব',
+    publishedOn: 'প্ৰকাশিত',
+    noticeAudience: 'শিক্ষাৰ্থী',
   },
 }
 

@@ -299,7 +299,7 @@ function daysUntil(value) {
 function WorkspacePage({ page, notify, onNavigate, currentUser }) {
   if (page === 'Students') return <PeoplePage notify={notify} />
   if (page === 'Documents') return <DocumentsPage notify={notify} />
-  if (page === 'Notices') return <NoticesPage notify={notify} />
+  if (page === 'Notices') return <NoticesPage notify={notify} currentUser={currentUser} />
   if (page === 'Events') return <EventsPage notify={notify} currentUser={currentUser} />
   if (page === 'Deadlines') return <DeadlinesPage notify={notify} />
   if (page === 'Analytics') return <AnalyticsPage notify={notify} />
