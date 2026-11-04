@@ -81,6 +81,7 @@ export const studentTranslations = {
     copied: 'Copied',
     regenerate: 'Regenerate',
     typing: 'Preparing response...',
+    connectingToAI: 'Connecting to Campus-Bondhu AI… (may take up to 90s on first request)',
 
     // Forward Dialog
     forwardTitle: 'Forward Message',
@@ -351,6 +352,7 @@ export const studentTranslations = {
     copied: 'কপি হ\'ল',
     regenerate: 'পুনৰ প্ৰস্তুত কৰক',
     typing: 'উত্তৰ প্ৰস্তুত কৰি থকা হৈছে...',
+    connectingToAI: 'Campus-Bondhu AI ৰ সৈতে সংযোগ হৈছে… (প্ৰথম অনুৰোধত ৯০ ছেকেণ্ড সময় লাগিব পাৰে)',
 
     // Forward Dialog
     forwardTitle: 'বাৰ্তা ফৰৱাৰ্ড কৰক',

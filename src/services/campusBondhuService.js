@@ -5,34 +5,62 @@
 
 import { auth } from './firebase.js'
 
-// In development, use Vite's proxy ('') to bypass browser CORS preflight restrictions
-const BACKEND_URL = (
-  typeof import.meta !== 'undefined' && import.meta.env?.DEV
-    ? ''
-    : (typeof import.meta !== 'undefined' && import.meta.env?.VITE_CAMPUS_BONDHU_API_URL
-        ? import.meta.env.VITE_CAMPUS_BONDHU_API_URL
-        : 'https://campus-bondhu.onrender.com')
-).replace(/\/+$/, '')
+/**
+ * Endpoint routing:
+ *  DEV  → Vite proxy at '' so /api/v1/... is proxied to campus-bondhu.onrender.com (no CORS)
+ *  PROD → Vercel serverless functions at /api/chat-proxy and /api/health-proxy (no CORS)
+ *
+ * Both approaches avoid browser CORS entirely by keeping the request same-origin.
+ */
+const IS_DEV = typeof import.meta !== 'undefined' && import.meta.env?.DEV
 
+// In dev, BACKEND_URL is '' (Vite proxy handles /api/v1/... → Render)
+// In prod, BACKEND_URL is unused — we call /api/chat-proxy instead
+const BACKEND_URL = IS_DEV ? '' : ''
+
+// Chat endpoint: dev uses Vite proxy to Render directly; prod uses Vercel function
+const CHAT_ENDPOINT = IS_DEV ? '/api/v1/chat/query' : '/api/chat-proxy'
+const HEALTH_ENDPOINT = IS_DEV ? '/api/v1/health' : '/api/health-proxy'
+
+// NOTE: This token may expire. If you see 401 errors, generate a fresh Supabase token
+// and update VITE_CAMPUS_BONDHU_STUDENT_TOKEN in .env
 const DEFAULT_SUPABASE_TOKEN =
-  'eyJhbGciOiJFUzI1NiIsImtpZCI6ImJjNmU0NWIwLWYzNDUtNDllMS1iZmYxLWE0YWU5ZWE0NzNhMyIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJodHRwczovL3NldmNyY2JwYW1zeGhwaXVsdGpiLnN1cGFiYXNlLmNvL2F1dGgvdjEiLCJzdWIiOiI1ZTJlNjVhMy0zN2UxLTQxMTktYjA4Mi02YTViZDA3ZGRmMzgiLCJhdWQiOiJhdXRoZW50aWNhdGVkIiwiZXhwIjoxNzkzNzg4MDA2LCJpYXQiOjE3OTM3ODQ0MDYsImVtYWlsIjoiYXJ5eWFtYW5ib3JhdHNrYWIwNEBnbWFpbC5jb20iLCJwaG9uZSI6IiIsImFwcF9tZXRhZGF0YSI6eyJwcm92aWRlciI6ImVtYWlsIiwicHJvdmlkZXJzIjpbImVtYWlsIl19LCJ1c2VyX21ldGFkYXRhIjp7ImVtYWlsX3ZlcmlmaWVkIjp0cnVlfSwicm9sZSI6ImF1dGhlbnRpY2F0ZWQiLCJhYWwiOiJhYWwxIiwiYW1yIjpbeyJtZXRob2QiOiJwYXNzd29yZCIsInRpbWVzdGFtcCI6MTc5Mzc4NDQwNn1dLCJzZXNzaW9uX2lkIjoiNjM1OTJiYzEtMmIzZS00ZjM5LTgyNWYtM2JiYWJhNDNiZGZkIiwiaXNfYW5vbnltb3VzIjpmYWxzZX0._AqJIfWbvyLkW0l2rBMytYuFZjizqgMtWSA_Lh87zStfC5hf2WnMW8l3KtZsOEBGOPYKhoLg0zrUy856MWCb0A'
+  'eyJhbGciOiJFUzI1NiIsImtpZCI6ImJjNmU0NWIwLWYzNDUtNDllMS1iZmYxLWE0YWU5ZWE0NzNhMyIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJodHRwczovL3NldmNyY2JwYW1zeGhwaXVsdGpiLnN1cGFiYXNlLmNvL2F1dGgvdjEiLCJzdWIiOiI1ZTJlNjVhMy0zN2UxLTQxMTktYjA4Mi02YTViZDA3ZGRmMzgiLCJhdWQiOiJhdXRoZW50aWNhdGVkIiwiZXhwIjoxNzkzNzk1OTg3LCJpYXQiOjE3OTM3OTIzODcsImVtYWlsIjoiYXJ5eWFtYW5ib3JhdHNrYWIwNEBnbWFpbC5jb20iLCJwaG9uZSI6IiIsImFwcF9tZXRhZGF0YSI6eyJwcm92aWRlciI6ImVtYWlsIiwicHJvdmlkZXJzIjpbImVtYWlsIl19LCJ1c2VyX21ldGFkYXRhIjp7ImVtYWlsX3ZlcmlmaWVkIjp0cnVlfSwicm9sZSI6ImF1dGhlbnRpY2F0ZWQiLCJhYWwxIjoiYWFswMSIsImFtciI6W3sibWV0aG9kIjoicGFzc3dvcmQiLCJ0aW1lc3RhbXAiOjE3OTM3OTIzODd9XSwic2Vzc2lvbl9pZCI6ImNlYzIwYTg1LTBhZWQtNDEwNS1iMGIzLWE1ZjY3MmFmMzZjZSIsImlzX2Fub255bW91cyI6ZmFsc2V9.RsDWTAgh1Yy6TRvsFdcCJVb1GKTkz07pwVmCdqNb6ew6FoU6cavq0FTu8U9t1iBcP0C1ASVKS0yLNidJ9E_79Q'
+
+/**
+ * Check if a JWT token is expired (client-side check without full verification).
+ * Uses regex to extract exp so it's resilient to malformed JSON payloads.
+ */
+function isTokenExpired(token) {
+  try {
+    // Use regex to extract exp value directly — avoids JSON.parse failing on malformed payloads
+    const payloadB64 = token.split('.')[1]
+    const decoded = atob(payloadB64.replace(/-/g, '+').replace(/_/g, '/'))
+    const match = decoded.match(/"exp"\s*:\s*(\d+)/)
+    if (!match) return false
+    return Date.now() / 1000 > parseInt(match[1], 10)
+  } catch {
+    return false
+  }
+}
 
 /**
  * Fetch authentication bearer token (Supabase JWT with runtime and environment fallbacks)
+ * Returns null if no valid token is available (backend may allow optional auth)
  */
 async function getAuthToken() {
-  // 1. Check runtime override if set
+  // 1. Check runtime override if set in localStorage
   try {
     if (typeof localStorage !== 'undefined') {
       const stored = localStorage.getItem('campusiq_supabase_token')
-      if (stored) return stored
+      if (stored && !isTokenExpired(stored)) return stored
     }
   } catch (_) {}
 
   // 2. Check environment variable
-  if (typeof import.meta !== 'undefined' && import.meta.env?.VITE_CAMPUS_BONDHU_STUDENT_TOKEN) {
-    return import.meta.env.VITE_CAMPUS_BONDHU_STUDENT_TOKEN
-  }
+  const envToken =
+    typeof import.meta !== 'undefined' && import.meta.env?.VITE_CAMPUS_BONDHU_STUDENT_TOKEN
+  if (envToken && !isTokenExpired(envToken)) return envToken
 
   // 3. Check active Firebase user if available
   try {
@@ -44,19 +72,27 @@ async function getAuthToken() {
     console.warn('[CampusBondhu] Error getting Firebase ID token:', error)
   }
 
-  // 4. Default verified Supabase student token
-  return DEFAULT_SUPABASE_TOKEN
+  // 4. Try default Supabase token only if not expired
+  if (!isTokenExpired(DEFAULT_SUPABASE_TOKEN)) {
+    return DEFAULT_SUPABASE_TOKEN
+  }
+
+  // 5. No valid token — return null and try unauthenticated request
+  console.warn('[CampusBondhu] All tokens expired. Attempting unauthenticated request.')
+  return null
 }
 
 /**
- * Quick health probe to check if Campus-Bondhu backend is active
+ * Quick health probe to warm up Campus-Bondhu backend (Render free tier cold boot)
+ * Uses a long timeout so the server has time to start before the user sends a message
  */
 export async function checkBackendHealth() {
   try {
     const controller = new AbortController()
-    const timeoutId = setTimeout(() => controller.abort(), 6000)
+    // 90s — enough time for Render free-tier to wake from sleep
+    const timeoutId = setTimeout(() => controller.abort(), 90000)
 
-    const response = await fetch(`${BACKEND_URL}/api/v1/health`, {
+    const response = await fetch(HEALTH_ENDPOINT, {
       method: 'GET',
       signal: controller.signal,
     })
@@ -64,23 +100,26 @@ export async function checkBackendHealth() {
 
     if (response.ok) {
       const data = await response.json().catch(() => ({}))
+      console.log('[CampusBondhu] Backend is awake:', data)
       return { online: true, data }
     }
+    console.warn('[CampusBondhu] Health check returned:', response.status)
     return { online: false, status: response.status }
   } catch (error) {
+    console.warn('[CampusBondhu] Health check failed:', error.message)
     return { online: false, error: error.message }
   }
 }
 
 /**
  * Send a chat message (text and/or image) to Campus-Bondhu
- * 
+ *
  * @param {Object} params
  * @param {string} params.message - The text message from the student
  * @param {string} params.language - 'en' | 'as' | 'hi'
  * @param {string} [params.studentId] - Student identifier or roll number
  * @param {Object} [params.attachment] - Optional file/image attachment { name, size, type, isImage, dataUrl }
- * @param {Array} [params.history] - Array of recent chat messages [{ role, content }]
+ * @param {Array}  [params.history] - Array of recent chat messages [{ role, content }]
  * @param {string} [params.conversationId] - Optional conversation UUID
  * @returns {Promise<{ success: boolean, reply?: string, citations?: Array, claims?: Array, source?: string, error?: string }>}
  */
@@ -93,8 +132,10 @@ export async function sendChatMessage({
   conversationId = null,
 }) {
   const controller = new AbortController()
-  // Allow 25 seconds for Render free tier wake-up / AI generation
-  const timeoutId = setTimeout(() => controller.abort(), 25000)
+  // 90 seconds — Render free tier can take up to 60-80s to cold-boot
+  const timeoutId = setTimeout(() => controller.abort(), 90000)
+
+  const startTime = Date.now()
 
   try {
     const token = await getAuthToken()
@@ -121,26 +162,46 @@ export async function sendChatMessage({
       payload.image_type = attachment.type
     }
 
-    // Target the primary Grounded RAG chat endpoint
-    console.log(`[CampusBondhu] Dispatching request to: ${BACKEND_URL || window.location.origin}/api/v1/chat/query`, {
-      query: payload.query,
+    const targetUrl = CHAT_ENDPOINT
+    console.log(`[CampusBondhu] → POST ${targetUrl} (${IS_DEV ? 'dev/Vite-proxy' : 'prod/Vercel-proxy'})`, {
+      query: payload.query.slice(0, 60),
       language: payload.selected_language,
       hasImage: !!payload.image,
       hasAuthToken: !!token,
     })
 
-    let response = await fetch(`${BACKEND_URL}/api/v1/chat/query`, {
+    let response = await fetch(targetUrl, {
       method: 'POST',
       headers,
       body: JSON.stringify(payload),
       signal: controller.signal,
     })
 
-    // If 404 or method not allowed, try alternate chat route
-    if (response.status === 404) {
-      response = await fetch(`${BACKEND_URL}/api/v1/chat`, {
+    console.log(`[CampusBondhu] Response status: ${response.status} in ${Date.now() - startTime}ms`)
+
+    // If auth failed (401) or unprocessable entity (422 = bad JWT structure), retry without auth
+    if ((response.status === 401 || response.status === 422) && token) {
+      const bodyPreview = await response.clone().text().catch(() => '')
+      console.warn(`[CampusBondhu] ${response.status} — token rejected (${bodyPreview.slice(0, 120)}). Retrying without auth...`)
+      const noAuthHeaders = {
+        'Content-Type': 'application/json',
+        Accept: 'application/json',
+      }
+      response = await fetch(targetUrl, {
         method: 'POST',
-        headers,
+        headers: noAuthHeaders,
+        body: JSON.stringify(payload),
+        signal: controller.signal,
+      })
+      console.log(`[CampusBondhu] No-auth retry status: ${response.status} in ${Date.now() - startTime}ms`)
+    }
+
+    // If 404 on primary route, try alternate chat route (dev only — Vercel proxy handles prod)
+    if (response.status === 404 && IS_DEV) {
+      console.warn('[CampusBondhu] 404 on /chat/query — trying /api/v1/chat fallback route...')
+      response = await fetch('/api/v1/chat', {
+        method: 'POST',
+        headers: token ? headers : { 'Content-Type': 'application/json', Accept: 'application/json' },
         body: JSON.stringify({
           message: payload.query,
           language: payload.selected_language,
@@ -156,6 +217,7 @@ export async function sendChatMessage({
 
     if (response.ok) {
       const data = await response.json()
+      console.log('[CampusBondhu] 200 OK — raw response keys:', Object.keys(data), '| full:', JSON.stringify(data).slice(0, 300))
       const reply =
         data.answer ||
         data.reply ||
@@ -164,7 +226,7 @@ export async function sendChatMessage({
         (typeof data === 'string' ? data : null)
 
       if (reply) {
-        console.log('[CampusBondhu] Received live AI reply:', reply.slice(0, 80))
+        console.log(`[CampusBondhu] Live AI reply received in ${Date.now() - startTime}ms:`, reply.slice(0, 80))
         return {
           success: true,
           reply,
@@ -175,10 +237,15 @@ export async function sendChatMessage({
           source: 'Campus-Bondhu',
         }
       }
+      console.warn('[CampusBondhu] 200 OK but no reply field found in response. Keys:', Object.keys(data))
     }
 
     const errDetail = await response.text().catch(() => '')
-    console.warn(`[CampusBondhu] HTTP ${response.status} from backend. Details:`, errDetail, '→ Engaging local fallback.')
+    console.warn(
+      `[CampusBondhu] HTTP ${response.status} from backend after ${Date.now() - startTime}ms. Details:`,
+      errDetail.slice(0, 200),
+      '→ Engaging local fallback.',
+    )
     return {
       success: false,
       status: response.status,
@@ -187,7 +254,7 @@ export async function sendChatMessage({
   } catch (error) {
     clearTimeout(timeoutId)
     if (error.name === 'AbortError') {
-      console.warn('[CampusBondhu] Request timed out (Render cold-boot). Using local fallback.')
+      console.warn(`[CampusBondhu] Request timed out after ${Date.now() - startTime}ms (Render cold-boot takes ~60-80s).`)
     } else {
       console.warn('[CampusBondhu] Network error:', error.message)
     }

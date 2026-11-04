@@ -45,7 +45,7 @@ import {
   saveConversations,
   savePreferences,
 } from './services/studentChatService'
-import { sendChatMessage } from './services/campusBondhuService'
+import { checkBackendHealth, sendChatMessage } from './services/campusBondhuService'
 import { clearCurrentSession, getCurrentSession } from './services/authService'
 import { getStudentTranslation, studentTranslations } from './services/studentTranslations'
 import RaiseIssueView from './components/campuscare/RaiseIssueView'
@@ -93,8 +93,22 @@ export default function StudentApp() {
   const [activeView, setActiveView] = useState('chat') // 'chat' | 'raise-issue' | 'my-issues' | 'events' | 'notices' | 'career'
   const [notifications, setNotifications] = useState([])
   const [notificationsOpen, setNotificationsOpen] = useState(false)
+  // Backend warm-up state: 'idle' | 'waking' | 'online' | 'offline'
+  const [backendStatus, setBackendStatus] = useState('idle')
 
   const studentUid = student?.uid || student?.id || ''
+
+  // Warm up Render free-tier backend on mount (fires silently in background)
+  useEffect(() => {
+    setBackendStatus('waking')
+    checkBackendHealth().then((result) => {
+      setBackendStatus(result.online ? 'online' : 'offline')
+      if (!result.online) {
+        // Reset to idle so banner doesn't permanently show 'offline'
+        setTimeout(() => setBackendStatus('idle'), 8000)
+      }
+    })
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     const unsub = subscribeNotifications({ role: 'student', uid: studentUid }, (items) => {
@@ -572,6 +586,31 @@ export default function StudentApp() {
 
   return (
     <div className={`student-app ${preferences.theme === 'dim' ? 'student-theme-dim' : ''}`}>
+      {/* Backend status banner — shown while Render wakes up or if offline */}
+      {backendStatus === 'waking' && (
+        <div
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            zIndex: 9999,
+            background: 'linear-gradient(90deg,#0d6efd,#0a9460)',
+            color: '#fff',
+            fontSize: '0.78rem',
+            fontWeight: 500,
+            padding: '6px 16px',
+            textAlign: 'center',
+            letterSpacing: '0.01em',
+          }}
+        >
+          <span style={{ marginRight: 6, opacity: 0.8 }}>⚡</span>
+          {currentLang === 'as'
+            ? 'AI সহায়ক সংযোগ স্থাপন হৈছে…'
+            : 'Connecting to Campus-Bondhu AI — first response may take up to 90s while server wakes up…'}
+        </div>
+      )}
+
       <aside className={`student-sidebar ${sidebarOpen ? 'is-open' : ''}`}>
         <div className="student-sidebar-top">
           <button className="brand-outline-pill student-brand-pill" onClick={startNewChat} title="CampusIQ">
@@ -1171,10 +1210,15 @@ function ConversationView({ conversation, sending, copiedId, onCopy, onForward, 
             <span className="assistant-avatar">
               <Sparkles size={14} />
             </span>
-            <div className="typing-bubble">
-              <span />
-              <span />
-              <span />
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+              <div className="typing-bubble">
+                <span />
+                <span />
+                <span />
+              </div>
+              <small style={{ color: 'var(--student-muted)', fontSize: '0.72rem', paddingLeft: 2 }}>
+                {t('connectingToAI') || 'Connecting to Campus-Bondhu AI… (may take up to 90s on first request)'}
+              </small>
             </div>
           </div>
         )}
