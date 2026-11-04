@@ -4,7 +4,7 @@ CampusIQ is an AI-powered bilingual university assistant, administrative portal,
 
 ---
 
-## 🚀 What's New & Active Highlights
+## 🚀 What's New & Active Highlights.
 
 1. **CampusCare — Complete Campus Issue Reporting & Resolution System**:
    - **Student "Raise an Issue"**: Dedicated bilingual complaint submission page with title, description, category (8 categories), campus location (building, floor, room), additional details, and multi-image photo attachments.
