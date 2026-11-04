@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <linearGradient id="grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#1f4d3d"/>
+      <stop offset="100%" stop-color="#122a21"/>
+    </linearGradient>
+  </defs>
+  <rect width="512" height="512" rx="115" fill="url(#grad)"/>
+  <circle cx="256" cy="256" r="170" stroke="#10b981" stroke-width="6" fill="none" opacity="0.4" stroke-dasharray="12 8"/>
+  <!-- Mortarboard cap -->
+  <polygon points="256,150 390,210 256,270 122,210" fill="#f7fbf5"/>
+  <!-- Cap skull band -->
+  <path d="M176,236 L176,290 C176,330 336,330 336,290 L336,236 L256,272 Z" fill="#e2ebe2"/>
+  <!-- Tassel -->
+  <path d="M390,210 L395,285 C395,300 405,300 405,285 L396,210 Z" fill="#10b981"/>
+  <circle cx="400" cy="295" r="8" fill="#34d399"/>
+  <!-- Sparkle crest -->
+  <polygon points="256,360 264,380 284,388 264,396 256,416 248,396 228,388 248,380" fill="#f7fbf5"/>
+</svg>

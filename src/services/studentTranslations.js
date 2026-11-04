@@ -67,6 +67,11 @@ export const studentTranslations = {
       'CampusIQ can make mistakes. Verify important information with official university sources.',
     attachedTag: 'attached. Ready to send.',
     removeAttachment: 'Remove attachment',
+    imageAttached: 'Image attached. Ready to analyze.',
+    viewFullImage: 'Click to expand image',
+    visualAnalysis: 'Visual Document Analysis',
+    campusBondhuActive: 'Campus-Bondhu AI Active',
+    analyzingImageWithAI: 'Analyzing document with Campus-Bondhu...',
 
     // Message Actions & Labels
     answerLabel: 'CampusIQ Answer',
@@ -332,6 +337,11 @@ export const studentTranslations = {
       'কেম্পাছআইকিউৰ ভুল হ\'ব পাৰে। বিশ্ববিদ্যালয়ৰ চৰকাৰী উৎসৰ সৈতে পৰীক্ষা কৰক।',
     attachedTag: 'সংলগ্ন কৰা হ\'ল। পঠিয়াবলৈ সাজু।',
     removeAttachment: 'সংলগ্ন নথি আঁতৰাওক',
+    imageAttached: 'ছবি সংলগ্ন কৰা হৈছে। বিশ্লেষণৰ বাবে সাজু।',
+    viewFullImage: 'সম্পূৰ্ণ ছবি চাবলৈ ক্লিক কৰক',
+    visualAnalysis: 'দৃশ্য নথি বিশ্লেষণ',
+    campusBondhuActive: 'কেম্পাছ-বন্ধু AI সক্ৰিয়',
+    analyzingImageWithAI: 'কেম্পাছ-বন্ধুৰ দ্বাৰা নথি বিশ্লেষণ কৰা হৈছে...',
 
     // Message Actions & Labels
     answerLabel: 'কেম্পাছআইকিউ উত্তৰ',

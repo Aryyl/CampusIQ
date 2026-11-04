@@ -43,7 +43,8 @@ import StudentApp from './StudentApp'
 import AuthPage from './pages/AuthPage'
 import { useCampusData } from './context/CampusDataContext'
 import { formatDate, formatFileSize, formatShortDate } from './utils/formatters'
-import { clearCurrentSession } from './services/authService'
+import { clearCurrentSession, getCurrentSession, quickDemoLogin } from './services/authService'
+import { isStandaloneMode } from './services/pwaService'
 import { markAllAsRead, markAsRead, subscribeNotifications } from './services/notificationService'
 
 const navItems = [
@@ -154,6 +155,20 @@ function App() {
   const [profileOpen, setProfileOpen] = useState(false)
   const [notificationsOpen, setNotificationsOpen] = useState(false)
   const [toast, setToast] = useState('')
+
+  useEffect(() => {
+    // If launched as an installed PWA or via ?pwa=student shortcut, directly open Student Portal
+    const isPwa = isStandaloneMode() || window.location.search.includes('pwa=student')
+    if (isPwa) {
+      const session = getCurrentSession()
+      if (session && session.role === 'student') {
+        setCurrentUser(session)
+      } else {
+        const studentUser = quickDemoLogin('student')
+        setCurrentUser(studentUser)
+      }
+    }
+  }, [])
 
   const notify = (message) => {
     setToast(message)

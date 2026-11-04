@@ -4,6 +4,7 @@ import {
   Archive,
   ArrowDown,
   Bell,
+  BookOpen,
   CalendarDays,
   Check,
   ChevronDown,
@@ -15,7 +16,9 @@ import {
   Forward,
   Globe,
   Hash,
+  Image as ImageIcon,
   LogOut,
+  Maximize2,
   Menu,
   MessageCircle,
   Megaphone,
@@ -42,6 +45,7 @@ import {
   saveConversations,
   savePreferences,
 } from './services/studentChatService'
+import { sendChatMessage } from './services/campusBondhuService'
 import { clearCurrentSession, getCurrentSession } from './services/authService'
 import { getStudentTranslation, studentTranslations } from './services/studentTranslations'
 import RaiseIssueView from './components/campuscare/RaiseIssueView'
@@ -49,6 +53,7 @@ import MyIssuesView from './components/campuscare/MyIssuesView'
 import StudentEventsView from './components/events/StudentEventsView'
 import StudentNoticesView from './components/notices/StudentNoticesView'
 import CareerCompassView from './components/career/CareerCompassView'
+import PwaInstallPrompt from './components/common/PwaInstallPrompt'
 import { markAllAsRead, markAsRead, subscribeNotifications } from './services/notificationService'
 import './student.css'
 
@@ -81,6 +86,7 @@ export default function StudentApp() {
   const [deleteId, setDeleteId] = useState(null)
   const [copiedId, setCopiedId] = useState(null)
   const [forwardingMessage, setForwardingMessage] = useState(null)
+  const [previewImage, setPreviewImage] = useState(null)
   const [notice, setNotice] = useState('')
   const [inputFocused, setInputFocused] = useState(false)
   const [isListening, setIsListening] = useState(false)
@@ -260,7 +266,7 @@ export default function StudentApp() {
   }
 
   // -------------------------------------------------------------
-  // Document Attachment Handler
+  // Document / Image Attachment Handler
   // -------------------------------------------------------------
   const handleAttachment = (event) => {
     const selected = event.target.files?.[0]
@@ -269,32 +275,52 @@ export default function StudentApp() {
       if (selected.size > 1024 * 1024) {
         formattedSize = `${(selected.size / (1024 * 1024)).toFixed(1)} MB`
       }
-      setAttachment({
-        name: selected.name,
-        size: formattedSize,
-        type: selected.type,
-      })
-      flash(`"${selected.name}" ${t('attachedTag')}`)
+      const isImage = selected.type.startsWith('image/')
+      if (isImage) {
+        const reader = new FileReader()
+        reader.onload = (e) => {
+          setAttachment({
+            name: selected.name,
+            size: formattedSize,
+            type: selected.type,
+            isImage: true,
+            dataUrl: e.target?.result,
+          })
+          flash(`"${selected.name}" ${t('imageAttached') || t('attachedTag')}`)
+        }
+        reader.readAsDataURL(selected)
+      } else {
+        setAttachment({
+          name: selected.name,
+          size: formattedSize,
+          type: selected.type,
+          isImage: false,
+          dataUrl: null,
+        })
+        flash(`"${selected.name}" ${t('attachedTag')}`)
+      }
     }
     if (fileInputRef.current) fileInputRef.current.value = ''
   }
 
   // -------------------------------------------------------------
-  // Send / Forward Message to Active Chat
+  // Send / Forward Message to Active Chat (Live Campus-Bondhu + Fallback)
   // -------------------------------------------------------------
-  const sendMessage = (value = composer) => {
+  const sendMessage = async (value = composer) => {
     const text = value.trim()
     if ((!text && !attachment) || sending) return
 
     const timestamp = new Date().toISOString()
     const content = text || (currentLang === 'as' ? `সংলগ্ন নথি: ${attachment?.name}` : `Shared document: ${attachment?.name}`)
 
+    const attachedData = attachment ? { ...attachment } : null
+
     const userMessage = {
       id: `message-${Date.now()}`,
       role: 'user',
       content,
       createdAt: timestamp,
-      attachment: attachment ? { name: attachment.name, size: attachment.size, type: attachment.type } : null,
+      attachment: attachedData,
     }
 
     let conversation = activeConversation
@@ -303,8 +329,10 @@ export default function StudentApp() {
         ? content.split(/\s+/).slice(0, 6).join(' ')
         : conversation.title
 
+    let currentConvId = conversation?.id
     if (!conversation) {
       conversation = { ...createConversation(nextTitle), messages: [userMessage] }
+      currentConvId = conversation.id
       setConversations((current) => [conversation, ...current])
       setActiveId(conversation.id)
     } else {
@@ -326,28 +354,48 @@ export default function StudentApp() {
     }
     setSending(true)
 
-    window.setTimeout(() => {
+    try {
+      const bondhuResult = await sendChatMessage({
+        message: text || content,
+        language: currentLang,
+        studentId: student?.studentId || 'student_user',
+        attachment: attachedData,
+        history: conversation?.messages || [],
+        conversationId: currentConvId,
+      })
+
       let assistantMessage
-      if (userMessage.attachment && !text) {
+      if (bondhuResult && bondhuResult.success && bondhuResult.reply) {
         assistantMessage = {
           id: `assistant-${Date.now()}`,
           role: 'assistant',
-          content:
-            currentLang === 'as'
-              ? `মই আপোনাৰ নথি **${userMessage.attachment.name}** (${userMessage.attachment.size}) লাভ কৰিলোঁ।\n\nমই ইয়াত কেনেকৈ সহায় কৰিব পাৰোঁ?\n- নথিখনৰ **মূল নিয়মবোৰ সংক্ষিপ্ত কৰক**\n- গুৰুত্বপূৰ্ণ **সময়সীমা আৰু তাৰিখ উলিয়াওক**\n- ইয়াৰ ভিত্তিত **প্ৰশ্নৰ উত্তৰ দিয়ক**`
-              : `I've received your document **${userMessage.attachment.name}** (${userMessage.attachment.size}).\n\nHow would you like me to assist you with it?\n- **Summarize** the document regulations\n- **Extract** key dates and deadlines\n- **Answer questions** based on its contents`,
+          content: bondhuResult.reply,
+          citations: bondhuResult.citations || [],
+          claims: bondhuResult.claims || [],
+          source: 'Campus-Bondhu',
           createdAt: new Date().toISOString(),
         }
       } else {
-        assistantMessage = getDemoAssistantResponse(text || content, currentLang)
+        assistantMessage = getDemoAssistantResponse(text || content, currentLang, attachedData)
+        assistantMessage.source = 'CampusIQ Assistant'
       }
-      updateConversation(conversation.id, (current) => ({
+
+      updateConversation(currentConvId, (current) => ({
         ...current,
         updatedAt: assistantMessage.createdAt,
         messages: [...current.messages, assistantMessage],
       }))
+    } catch (err) {
+      console.warn('[Chat] Fallback engaged:', err)
+      const assistantMessage = getDemoAssistantResponse(text || content, currentLang, attachedData)
+      updateConversation(currentConvId, (current) => ({
+        ...current,
+        updatedAt: assistantMessage.createdAt,
+        messages: [...current.messages, assistantMessage],
+      }))
+    } finally {
       setSending(false)
-    }, 720)
+    }
   }
 
   // -------------------------------------------------------------
@@ -407,11 +455,12 @@ export default function StudentApp() {
     flash(t('quotedSuccessNotice'))
   }
 
-  const regenerate = () => {
+  const regenerate = async () => {
     if (!activeConversation || sending) return
     const lastUser = [...activeConversation.messages].reverse().find((message) => message.role === 'user')
     if (!lastUser) return
-    updateConversation(activeConversation.id, (current) => ({
+    const convId = activeConversation.id
+    updateConversation(convId, (current) => ({
       ...current,
       messages: current.messages.filter(
         (message) =>
@@ -420,13 +469,49 @@ export default function StudentApp() {
       ),
     }))
     setSending(true)
-    window.setTimeout(() => {
-      updateConversation(activeConversation.id, (current) => ({
+
+    try {
+      const bondhuResult = await sendChatMessage({
+        message: lastUser.content,
+        language: currentLang,
+        studentId: student?.studentId || 'student_user',
+        attachment: lastUser.attachment,
+        history: activeConversation.messages.slice(-6),
+        conversationId: convId,
+      })
+
+      let assistantMessage
+      if (bondhuResult && bondhuResult.success && bondhuResult.reply) {
+        assistantMessage = {
+          id: `assistant-${Date.now()}`,
+          role: 'assistant',
+          content: bondhuResult.reply,
+          citations: bondhuResult.citations || [],
+          claims: bondhuResult.claims || [],
+          source: 'Campus-Bondhu',
+          createdAt: new Date().toISOString(),
+        }
+      } else {
+        assistantMessage = getDemoAssistantResponse(lastUser.content, currentLang, lastUser.attachment)
+        assistantMessage.source = 'CampusIQ Assistant'
+      }
+
+      updateConversation(convId, (current) => ({
         ...current,
-        messages: [...current.messages, getDemoAssistantResponse(lastUser.content, currentLang)],
+        updatedAt: assistantMessage.createdAt,
+        messages: [...current.messages, assistantMessage],
       }))
+    } catch (err) {
+      console.warn('[Regenerate] Fallback engaged:', err)
+      const assistantMessage = getDemoAssistantResponse(lastUser.content, currentLang, lastUser.attachment)
+      updateConversation(convId, (current) => ({
+        ...current,
+        updatedAt: assistantMessage.createdAt,
+        messages: [...current.messages, assistantMessage],
+      }))
+    } finally {
       setSending(false)
-    }, 650)
+    }
   }
 
   const handleComposerKeyDown = (event) => {
@@ -748,6 +833,8 @@ export default function StudentApp() {
           </div>
         </header>
 
+        <PwaInstallPrompt currentLang={currentLang} t={t} />
+
         <div className="student-conversation-wrap">
           {activeView === 'events' ? (
             <StudentEventsView
@@ -788,6 +875,7 @@ export default function StudentApp() {
               onCopy={copyMessage}
               onForward={(msg) => setForwardingMessage(msg)}
               onRegenerate={regenerate}
+              onViewImage={(url) => setPreviewImage(url)}
               t={t}
             />
           ) : (
@@ -805,8 +893,12 @@ export default function StudentApp() {
         <div className={`student-composer-area ${inputFocused ? 'focused' : ''}`}>
           <div className="student-composer-shell">
             {attachment && (
-              <div className="attachment-chip">
-                <FileText size={13} />
+              <div className={`attachment-chip ${attachment.isImage ? 'image-chip' : ''}`}>
+                {attachment.isImage && attachment.dataUrl ? (
+                  <img src={attachment.dataUrl} alt={attachment.name} className="composer-preview-thumb" />
+                ) : (
+                  <FileText size={13} />
+                )}
                 <span className="attachment-name">{attachment.name}</span>
                 <span className="attachment-meta">({attachment.size})</span>
                 <button onClick={() => setAttachment(null)} aria-label={t('removeAttachment')} title={t('removeAttachment')}>
@@ -829,7 +921,7 @@ export default function StudentApp() {
                 <input
                   ref={fileInputRef}
                   type="file"
-                  accept=".pdf,.doc,.docx,.txt,.csv,.png,.jpg,.jpeg"
+                  accept=".pdf,.doc,.docx,.txt,.csv,.png,.jpg,.jpeg,.webp"
                   hidden
                   onChange={handleAttachment}
                 />
@@ -896,6 +988,18 @@ export default function StudentApp() {
           onQuoteToComposer={handleQuoteToComposer}
           t={t}
         />
+      )}
+
+      {/* Expanded Image Lightbox Viewer */}
+      {previewImage && (
+        <div className="student-image-lightbox" onClick={() => setPreviewImage(null)}>
+          <div className="lightbox-content" onClick={(e) => e.stopPropagation()}>
+            <button className="lightbox-close" onClick={() => setPreviewImage(null)} aria-label="Close image">
+              <X size={20} />
+            </button>
+            <img src={previewImage} alt="Expanded preview" className="lightbox-image" />
+          </div>
+        </div>
       )}
 
       {renameId && (
@@ -1034,7 +1138,7 @@ function WelcomeView({ student, suggestions, onPrompt, t }) {
   )
 }
 
-function ConversationView({ conversation, sending, copiedId, onCopy, onForward, onRegenerate, t }) {
+function ConversationView({ conversation, sending, copiedId, onCopy, onForward, onRegenerate, onViewImage, t }) {
   return (
     <div className="conversation-view">
       <div className="conversation-heading">
@@ -1058,6 +1162,7 @@ function ConversationView({ conversation, sending, copiedId, onCopy, onForward, 
             onCopy={onCopy}
             onForward={onForward}
             onRegenerate={onRegenerate}
+            onViewImage={onViewImage}
             t={t}
           />
         ))}
@@ -1078,19 +1183,38 @@ function ConversationView({ conversation, sending, copiedId, onCopy, onForward, 
   )
 }
 
-function MessageBubble({ message, copiedId, onCopy, onForward, onRegenerate, t }) {
+function MessageBubble({ message, copiedId, onCopy, onForward, onRegenerate, onViewImage, t }) {
   if (message.role === 'user') {
     return (
       <div className="user-row">
         <div className="user-bubble">
           {message.attachment && (
-            <div className="message-attachment-card">
-              <FileText size={14} />
-              <div>
-                <strong>{message.attachment.name}</strong>
-                {message.attachment.size && <small>({message.attachment.size})</small>}
+            message.attachment.isImage && message.attachment.dataUrl ? (
+              <div
+                className="chat-bubble-image-wrapper"
+                onClick={() => onViewImage && onViewImage(message.attachment.dataUrl)}
+                title={t('viewFullImage')}
+              >
+                <img
+                  src={message.attachment.dataUrl}
+                  alt={message.attachment.name}
+                  className="chat-bubble-image"
+                />
+                <div className="chat-bubble-image-bar">
+                  <span className="chat-bubble-image-name">{message.attachment.name}</span>
+                  <span className="chat-bubble-image-size">({message.attachment.size})</span>
+                  <Maximize2 size={12} className="chat-bubble-image-expand" />
+                </div>
               </div>
-            </div>
+            ) : (
+              <div className="message-attachment-card">
+                <FileText size={14} />
+                <div>
+                  <strong>{message.attachment.name}</strong>
+                  {message.attachment.size && <small>({message.attachment.size})</small>}
+                </div>
+              </div>
+            )
           )}
           {message.content}
         </div>
@@ -1112,10 +1236,32 @@ function MessageBubble({ message, copiedId, onCopy, onForward, onRegenerate, t }
         <Sparkles size={14} />
       </span>
       <div className="assistant-content">
-        <div className="demo-response-label">
-          <Sparkles size={12} /> {t('answerLabel')}
+        <div className={`demo-response-label ${message.source === 'Campus-Bondhu' ? 'bondhu-live' : ''}`}>
+          <Sparkles size={12} />
+          {message.source === 'Campus-Bondhu' ? (
+            <>
+              <strong>Campus-Bondhu AI</strong>
+              <span className="live-bondhu-pill">Live Backend</span>
+            </>
+          ) : (
+            t('answerLabel')
+          )}
         </div>
         <MarkdownContent content={message.content} />
+        {message.citations && message.citations.length > 0 && (
+          <div className="chat-citations-card">
+            <div className="citations-title">
+              <BookOpen size={12} /> Citations ({message.citations.length})
+            </div>
+            <div className="citations-tags">
+              {message.citations.map((cite, idx) => (
+                <span key={idx} className="citation-pill" title={cite.snippet || ''}>
+                  [{idx + 1}] {cite.document_title || cite.title || 'Document'} {cite.page ? `(p. ${cite.page})` : ''}
+                </span>
+              ))}
+            </div>
+          </div>
+        )}
         <div className="message-actions">
           <button onClick={() => onForward(message)} title={t('forward')}>
             <Forward size={13} /> {t('forward')}
@@ -1140,7 +1286,12 @@ function ForwardDialog({ message, conversations, activeId, onClose, onForwardToC
         <p className="forward-snippet">"{message.content.length > 180 ? `${message.content.slice(0, 180)}...` : message.content}"</p>
         {message.attachment && (
           <div className="forward-attachment-tag">
-            <FileText size={12} /> {message.attachment.name}
+            {message.attachment.isImage && message.attachment.dataUrl ? (
+              <img src={message.attachment.dataUrl} alt={message.attachment.name} className="forward-attachment-thumb" />
+            ) : (
+              <FileText size={12} />
+            )}
+            <span>{message.attachment.name}</span>
           </div>
         )}
       </div>
